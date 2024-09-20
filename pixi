@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Uncomment if proxy is needed for downloading things from internet.
+# export http_proxy=http://example.com:888
+# export https_proxy=http://example.com:888
+export PIXI_CACHE_DIR=$(pwd)/.rattler
+export PIXI_HOME=$(pwd)/.pixi
+export PIXI_NO_PATH_UPDATE=1
+
+pixi_bin=$PIXI_HOME/bin
+pixi=$PIXI_HOME/bin/pixi
+
+cwd=$(realpath $(pwd))
+
+create_activate_script() {
+  echo "#!/usr/bin/env zsh" > activate.sh
+  echo "" >> activate.sh
+  zsh -c "$pixi shell-hook >> activate.sh"
+  # This is needed to keep the shell alive.
+  echo "zsh" >> activate.sh
+  chmod +x activate.sh
+}
+
+# echo $cwd
+
+if [ "$1" = "bootstrap" ]; then
+    rm -rf .pixi > /dev/null 2>&1
+    rm -rf .rattler > /dev/null 2>&1
+    zsh -c "export http_proxy=$http_proxy; export https_proxy=$https_proxy; curl -fsSL https://pixi.sh/install.sh | bash "
+    export PATH=$(pwd):$PATH
+    zsh -c "export http_proxy=$http_proxy; export https_proxy=$https_proxy; $pixi install"
+    chmod g+rw -R .rattler
+    chmod g+rw -R .pixi
+
+    create_activate_script
+else
+    pixi_arguments=$@
+    zsh -c "export http_proxy=$http_proxy; export https_proxy=$https_proxy; cd $cwd; $pixi $pixi_arguments"
+fi

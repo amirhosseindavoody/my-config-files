@@ -1,0 +1,10 @@
+# pixi environments
+.pixi
+.rattler
+*.egg-info
+
+activate.sh
+
+cpp_project/build/
+cpp_project/.conan/
+cpp_project/.cache/
