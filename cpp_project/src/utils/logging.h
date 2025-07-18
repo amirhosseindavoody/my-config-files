@@ -3,23 +3,27 @@
 
 #include <spdlog/spdlog.h>
 
-namespace dvd {
+namespace utils {
 
 #define SPDLOG_CHECK(condition, ...)                                     \
   if (!(condition)) {                                                    \
     SPDLOG_ERROR("Check failed: " #condition ". {}", ##__VA_ARGS__);     \
     throw std::runtime_error(                                            \
         fmt::format("Check failed: " #condition ". {}", ##__VA_ARGS__)); \
-  }  // namespace uvm
+  }  // namespace utils
+
+#define SPDLOG_THROW2(...)   \
+  SPDLOG_ERROR(__VA_ARGS__); \
+  throw std::runtime_error(fmt::format(__VA_ARGS__));
 
 // Set the default logger to a file_logger.
-void InitializeFileLogger(const std::string& log_file);
+void InitializeFileLogger(const std::string &log_file);
 
 // Converts a 2D vector of strings into a formatted table string.
-std::string TableToString(const std::vector<std::vector<std::string>>& table);
+std::string TableToString(const std::vector<std::vector<std::string>> &table);
 
 // Converts a 2D vector of strings into a formatted table string.
-std::string TableToCsv(const std::vector<std::vector<std::string>>& table);
+std::string TableToCsv(const std::vector<std::vector<std::string>> &table);
 
 // Helper class to initialize the logger
 class LoggerInitializer {
@@ -38,6 +42,6 @@ class LoggerInitializer {
 // Global instance of the helper class
 static LoggerInitializer logger_initializer;
 
-}  // namespace dvd
+}  // namespace utils
 
 #endif  // LOGGING_H

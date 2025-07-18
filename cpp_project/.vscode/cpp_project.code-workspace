@@ -122,6 +122,7 @@
             "valarray": "cpp",
             "variant": "cpp"
         },
+        "clangd.path": "${workspaceFolder}/.pixi/envs/default/bin/clangd",
         "clangd.arguments": [
             "--compile-commands-dir=${workspaceFolder}/build",
             "--background-index",
@@ -134,9 +135,13 @@
             "-stdlib=libc++"
         ],
         "explorer.autoRevealExclude": {
+            "**/.conan": true,
             "**/.pixi": true,
             "**/build": true,
-            "**/.conan": true
+            "test": true,
+            "workarea": true,
+            "test_workarea": true,
+            "**/.vscode": true,
         },
         "[cpp]": {
             "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
@@ -145,5 +150,22 @@
         "clang-format.language.cpp.style": "Google",
         "C_Cpp.intelliSenseEngine": "disabled",
         "editor.inlayHints.enabled": "off",
+        "python.analysis.exclude": [
+            "**/build",
+            "**/.conan",
+            "**/.ruff_cache",
+            "**/.pixi",
+            "**/build-release"
+        ],
+        "python.analysis.include": [
+            // ".pixi/envs/default/lib/python3.9"
+        ],
+        "python.defaultInterpreterPath": "${workspaceFolder}/.pixi/envs/py39/bin/python",
+        "cmake.cmakePath": "${workspaceFolder}/.pixi/envs/default/bin/cmake",
+        "[cmake]": {
+            "editor.defaultFormatter": "KylinIdeTeam.cmake-intellisence",
+        },
+        "cmake.configureOnEdit": false,
+        "cmake.configureOnOpen": false,
     }
 }

@@ -1,58 +1,102 @@
 cmake_minimum_required(VERSION 3.30)
-project(TestProject LANGUAGES CXX)
+
+project(MCMC LANGUAGES CXX)
 
 include(CTest)
 include(GoogleTest)
+include(FetchContent)
 
 # strongly encouraged to enable this globally to avoid conflicts between
 # -Wpedantic being enabled and -std=c++20 and -std=gnu++20 for example when
 # compiling with PCH enabled
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# # Set custom compiler paths(adjust as needed)
-set(CMAKE_C_COMPILER ../.pixi/envs/default/bin/gcc)
-set(CMAKE_CXX_COMPILER ../.pixi/envs/default/bin/g++)
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Set the Release build flags to include the highest optimization level
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall")
-
-# Export the compile commands to enable clangd language server.
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_definitions(-DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG)
+FetchContent_Declare(
+  zlib
+  GIT_REPOSITORY https://github.com/madler/zlib.git
+  GIT_TAG v1.3.1) # Replace with the desired version tag
+FetchContent_MakeAvailable(zlib)
+# Ensure zlib is available before other dependencies that may need it
+include_directories(${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
+
+FetchContent_Declare(
+  cpptrace
+  GIT_REPOSITORY https://github.com/jeremy-rifkin/cpptrace.git
+  GIT_TAG v0.7.2)
+FetchContent_MakeAvailable(cpptrace)
+
+FetchContent_Declare(
+  yaml-cpp
+  GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+  GIT_TAG 0.8.0) # Replace with the desired version tag
+FetchContent_MakeAvailable(yaml-cpp)
+
+FetchContent_Declare(
+  fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+  GIT_TAG 11.1.4) # Replace with the desired version tag
+FetchContent_MakeAvailable(fmt)
+
+FetchContent_Declare(
+  nlohmann_json
+  GIT_REPOSITORY https://github.com/nlohmann/json.git
+  GIT_TAG v3.12.0) # Replace with the desired version tag
+FetchContent_MakeAvailable(nlohmann_json)
+
+FetchContent_Declare(
+  googletest
+  GIT_REPOSITORY https://github.com/google/googletest.git
+  GIT_TAG v1.16.0) # Replace with the desired version tag
+FetchContent_MakeAvailable(googletest)
+
+FetchContent_Declare(
+  spdlog
+  GIT_REPOSITORY https://github.com/gabime/spdlog.git
+  GIT_TAG v1.15.2) # Replace with the desired version tag
+FetchContent_MakeAvailable(spdlog)
+
+FetchContent_Declare(
+  argparse
+  GIT_REPOSITORY https://github.com/p-ranav/argparse.git
+  GIT_TAG v3.2) # Replace with the desired version tag
+FetchContent_MakeAvailable(argparse)
+
+FetchContent_Declare(
+  abseil
+  GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git
+  GIT_TAG 20250127.1) # Replace with the desired version tag
+FetchContent_MakeAvailable(abseil)
+
+# Define a variable that holds all third-party dependencies
+set(THIRDPARTY_LIBS
+  fmt::fmt
+  yaml-cpp
+  nlohmann_json::nlohmann_json
+  spdlog::spdlog
+  argparse::argparse
+  cpptrace::cpptrace
+  absl::flags
+  absl::flags_parse
+  absl::flags_usage
+  absl::flags_commandlineflag)
 
 set(GTEST GTest::gtest_main GTest::gmock_main)
 
-# Add spdlog
-find_package(spdlog REQUIRED)
-find_package(GTest REQUIRED)
-find_package(fmt REQUIRED)
+# # Enable coverage reporting if requested
+# # This can be toggled with the CMake option -DCOVERAGE=ON
+# option(COVERAGE "Enable coverage reporting" ON)
 
-# Define a variable that holds all third-party dependencies
-set(THIRDPARTY_LIBS fmt::fmt spdlog::spdlog)
+# if(COVERAGE)
+#   message(STATUS "Coverage reporting is enabled")
+#   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+#     add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
+#     add_link_options(-fprofile-instr-generate -fcoverage-mapping)
+#   endif()
+# endif()
 
-# Math utils library
-add_library(math_utils STATIC src/utils/math.cc)
-target_link_libraries(math_utils PUBLIC ${THIRDPARTY_LIBS})
-
-# # Math utils test add_executable(math_utils_test src/utils/math_test.cc)
-# target_link_libraries(math_utils_test ${GTEST} math_utils)
-# gtest_discover_tests(math_utils_test)
-
-# Logging2 library
-add_library(logging2 STATIC src/utils/logging.cpp)
-target_link_libraries(logging2 PUBLIC ${THIRDPARTY_LIBS})
-
-# Nelder Mead optimizer.
-add_library(nelder_mead STATIC src/optimizer/nelder_mead.cc)
-target_link_libraries(nelder_mead PUBLIC ${THIRDPARTY_LIBS} logging2 math_utils)
-
-# Nelder Mead optimizer test.
-add_executable(nelder_mead_test src/optimizer/nelder_mead_test.cc)
-target_link_libraries(nelder_mead_test ${GTEST} nelder_mead logging2)
-gtest_discover_tests(nelder_mead_test)
+add_subdirectory(src)

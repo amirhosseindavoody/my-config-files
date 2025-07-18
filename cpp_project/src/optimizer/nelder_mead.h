@@ -1,18 +1,18 @@
 #ifndef NELDER_MEAD_H
 #define NELDER_MEAD_H
+#include <cstddef>
 #include <functional>
 #include <limits>
 #include <string>
 #include <vector>
 
-namespace dvd {
+namespace optimizer {
 
 class ScipyNelderMead {
  public:
   using CallbackFunction = std::function<double(const std::vector<double>&)>;
-  ScipyNelderMead(const std::string& name = "Scipy Nelder Mead",
-                  bool verbose = false)
-      : name_(name), verbose_(verbose){};
+  ScipyNelderMead(const std::string& name = "Scipy Nelder Mead")
+      : name_(name) {};
 
   std::vector<double> Minimize(const CallbackFunction& callback,
                                const std::vector<double>& initial_point);
@@ -36,6 +36,9 @@ class ScipyNelderMead {
   // Number of iterations.
   size_t iterations = 0;
 
+  // Number of function calls.
+  size_t fcalls;
+
   // Parameters for updating simplex points.
   double rho = 1;
   double chi = 2;
@@ -54,9 +57,12 @@ class ScipyNelderMead {
 
  private:
   std::string name_;
-  bool verbose_;
 
   std::vector<std::vector<double>> make_simplex(
+      const std::vector<double>& initial_point);
+
+  std::vector<std::vector<double>> make_simplex2(
+      const CallbackFunction& callback,
       const std::vector<double>& initial_point);
 
   // Returns true if maximum difference between simplex is smaller than xatol.
@@ -64,7 +70,7 @@ class ScipyNelderMead {
       const std::vector<std::vector<double>>& simplex, double xatol);
 
   // Returns true if maximum difference between simplex is smaller than xatol.
-  bool FunctionMeatsAbsoluteTolerance(const std::vector<double>& f_simplex,
+  bool FunctionMeetsAbsoluteTolerance(const std::vector<double>& f_simplex,
                                       double fatol);
 
   // Returns the average point of the simplex point except for the last point of
@@ -76,6 +82,6 @@ class ScipyNelderMead {
                      std::vector<double>& point);
 };
 
-}  // namespace dvd
+}  // namespace optimizer
 
 #endif  // NELDER_MEAD_H

@@ -9,10 +9,12 @@
 #include <stdexcept>
 #include <vector>
 
-#include "../utils/logging.h"
-#include "../utils/math.h"
+#include "utils/logging.h"
+#include "utils/math.h"
 
-namespace dvd {
+namespace optimizer {
+
+using namespace utils;
 
 // Function to reorder a vector based on the given indices
 template <typename T>
@@ -32,36 +34,66 @@ std::vector<double> ScipyNelderMead::Minimize(
 
   SPDLOG_TRACE("------------ initial_point: {}", initial_point);
 
+  iterations = 0;
+  fcalls = 0;
+  success = false;
+  status = "Optimization has not started yet.";
+
+  auto wrapped_callback = [this, &callback](const std::vector<double>& x) {
+    fcalls += 1;
+    return callback(x);
+  };
+
   // Holds simplex points.
-  std::vector<std::vector<double>> simplex = make_simplex(initial_point);
+  // std::vector<std::vector<double>> simplex = make_simplex(initial_point);
+  std::vector<std::vector<double>> simplex =
+      make_simplex2(callback, initial_point);
 
   // Number of the simplex points.
   size_t n_simplex = simplex.size();
 
   std::vector<double> f_simplex(simplex.size(), 0);
-  std::transform(simplex.begin(), simplex.end(), f_simplex.begin(), callback);
+  std::transform(simplex.begin(), simplex.end(), f_simplex.begin(),
+                 wrapped_callback);
 
   // sort simplex so that the first point has the lowest function value.
   std::vector<size_t> idx = argsort(f_simplex);
   simplex = take(simplex, idx);
   f_simplex = take(f_simplex, idx);
 
-  // Number of function calls.
-  size_t fcalls = 0;
-  auto wrapped_callback = [&fcalls, &callback](const std::vector<double>& x) {
-    fcalls += 1;
-    return callback(x);
-  };
+  while (true) {
+    if (fcalls > maxfun) {
+      success = false;
+      status = fmt::format(
+          "Optimizer did NOT converged. fcalls({}) > maxfun({}), "
+          "iterations: {}, "
+          "simplex_meets_xatol: {}, function_meets_fatol: {}",
+          fcalls, maxfun, iterations,
+          SimplexMeetsAbsoluteTolerance(simplex, xatol),
+          FunctionMeetsAbsoluteTolerance(f_simplex, fatol));
+      break;
+    }
 
-  while ((fcalls < maxfun) || (iterations < maxiter)) {
+    if (iterations > maxiter) {
+      success = false;
+      status = fmt::format(
+          "Optimizer did NOT converged. iterations({}) > maxiter({}), "
+          "fcalls: {}, "
+          "simplex_meets_xatol: {}, function_meets_fatol: {}",
+          iterations, maxiter, fcalls,
+          SimplexMeetsAbsoluteTolerance(simplex, xatol),
+          FunctionMeetsAbsoluteTolerance(f_simplex, fatol));
+      break;
+    }
+
     if (SimplexMeetsAbsoluteTolerance(simplex, xatol) ||
-        FunctionMeatsAbsoluteTolerance(f_simplex, fatol)) {
+        FunctionMeetsAbsoluteTolerance(f_simplex, fatol)) {
       success = true;
       status = fmt::format(
           "Optimizer converged. fcalls: {}, iterations: {}, "
           "simplex_meets_xatol: {}, function_meets_fatol: {}",
           fcalls, iterations, SimplexMeetsAbsoluteTolerance(simplex, xatol),
-          FunctionMeatsAbsoluteTolerance(f_simplex, fatol));
+          FunctionMeetsAbsoluteTolerance(f_simplex, fatol));
       break;
     }
 
@@ -166,6 +198,51 @@ std::vector<std::vector<double>> ScipyNelderMead::make_simplex(
   return simplex;
 };
 
+std::vector<std::vector<double>> ScipyNelderMead::make_simplex2(
+    const CallbackFunction& callback,
+    const std::vector<double>& initial_point) {
+  std::vector<std::vector<double>> simplex(initial_point.size() + 1,
+                                           initial_point);
+
+  double f0 = callback(initial_point);
+
+  auto make_new_point = [&](size_t i, double range) {
+    double original_value = simplex[i][i - 1];
+
+    int n_steps = 20;
+    double step_size = range / double(n_steps);
+
+    for (int j = n_steps; j > 0; j--) {
+      simplex[i][i - 1] = original_value + step_size * j;
+      EnforceBounds(lower_bound, upper_bound, simplex[i]);
+      double f = callback(simplex[i]);
+      if (f < f0) {
+        return;
+      }
+    }
+    simplex[i][i - 1] = original_value + range;
+    EnforceBounds(lower_bound, upper_bound, simplex[i]);
+  };
+
+  if (stencile.size() == 1) {
+    for (size_t i = 1; i < simplex.size(); i++) {
+      make_new_point(i, stencile[0]);
+    }
+  } else {
+    SPDLOG_CHECK(
+        stencile.size() == initial_point.size(),
+        fmt::format("stencile must have either size of 1 or the same size as "
+                    "initial_point: stencil.size()={}, initial_point.size()={}",
+                    stencile.size(), initial_point.size()));
+
+    for (size_t i = 1; i < simplex.size(); i++) {
+      make_new_point(i, stencile[i - 1]);
+    }
+  }
+
+  return simplex;
+};
+
 std::vector<double> ScipyNelderMead::GetXbar(
     const std::vector<std::vector<double>>& simplex) {
   if (simplex.empty()) {
@@ -216,7 +293,7 @@ bool ScipyNelderMead::SimplexMeetsAbsoluteTolerance(
   return true;
 };
 
-bool ScipyNelderMead::FunctionMeatsAbsoluteTolerance(
+bool ScipyNelderMead::FunctionMeetsAbsoluteTolerance(
     const std::vector<double>& f_simplex, double fatol) {
   for (size_t i = 1; i < f_simplex.size(); ++i) {
     if (std::abs(f_simplex[i] - f_simplex[0]) > fatol) {
@@ -227,4 +304,4 @@ bool ScipyNelderMead::FunctionMeatsAbsoluteTolerance(
   return true;
 };
 
-}  // namespace dvd
+}  // namespace optimizer
