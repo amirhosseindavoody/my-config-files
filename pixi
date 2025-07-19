@@ -7,6 +7,10 @@ export PIXI_CACHE_DIR=$(pwd)/.rattler
 export PIXI_HOME=$(pwd)/.pixi
 export PIXI_NO_PATH_UPDATE=1
 
+# Set default proxy variables if not set
+: "${http_proxy:=}"
+: "${https_proxy:=}"
+
 pixi_bin=$PIXI_HOME/bin
 pixi=$PIXI_HOME/bin/pixi
 
@@ -31,8 +35,6 @@ if [ "$1" = "bootstrap" ]; then
     zsh -c "export http_proxy=$http_proxy; export https_proxy=$https_proxy; $pixi install"
     chmod g+rw -R .rattler
     chmod g+rw -R .pixi
-
-    create_activate_script
 else
     pixi_arguments=$@
     zsh -c "export http_proxy=$http_proxy; export https_proxy=$https_proxy; cd $cwd; $pixi $pixi_arguments"

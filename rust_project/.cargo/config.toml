@@ -1,0 +1,11 @@
+[net]
+git-fetch-with-cli = true
+retry = 5
+
+[http]
+low-speed-limit = 1000
+multiplexing = true
+timeout = 120
+
+[registry.crates-io]
+protocol = "sparse"
