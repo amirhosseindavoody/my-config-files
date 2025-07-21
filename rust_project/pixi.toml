@@ -9,3 +9,4 @@ version = "0.1.0"
 
 [dependencies]
 rust = ">=1.88.0,<1.89"
+rust-src = ">=1.88.0,<2"

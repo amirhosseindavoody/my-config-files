@@ -14,15 +14,22 @@
 			"**/.hg": true,
 			"**/.DS_Store": true,
 			"**/Thumbs.db": true,
-			"**/.pixi": true
+			// "**/.pixi": true
 		},
 		"rust-analyzer.server.path": "${workspaceFolder}/.pixi/envs/default/bin/rust-analyzer",
 		"rust-analyzer.cargo.sysroot": "${workspaceFolder}/.pixi/envs/default",
-		// // To help resolve rust-analyzer timeout issues
+		"rust-analyzer.cargo.sysrootSrc": "${workspaceFolder}/.pixi/envs/default/lib/rustlib/src/rust/library",
+		"rust-analyzer.linkedProjects": [
+			"${workspaceFolder}/hello_world/Cargo.toml"
+		],
+		// "rust-analyzer.trace.server": "messages",
+		///////////////////////////////////////////////////////////////
+		// To help resolve rust-analyzer timeout issues
 		// "rust-analyzer.server.extraEnv": {
 		// 	"CARGO_NET_GIT_FETCH_WITH_CLI": "true"
 		// },
 		// "rust-analyzer.cargo.buildScripts.enable": true,
 		// "rust-analyzer.procMacro.enable": true,
+		///////////////////////////////////////////////////////////////
 	}
 }
