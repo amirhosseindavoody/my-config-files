@@ -24,5 +24,9 @@
 		"rust-analyzer.linkedProjects": [
 			"${workspaceFolder}/hello_world/Cargo.toml"
 		],
+		// To enable formatting with pixi managed rustfmt
+		"rust-analyzer.rustfmt.overrideCommand": [
+			"${workspaceFolder}/.pixi/envs/default/bin/rustfmt"
+		],
 	}
 }
