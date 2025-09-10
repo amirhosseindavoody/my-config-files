@@ -1,0 +1,8 @@
+CompileFlags:
+  # When compiling using g++ and gcc some flags may not be present in clang
+  # and cause clangd to complain about missing flags.
+  # The following removes some of those flags.
+  Remove:
+    - "-fmodules-ts"
+    - "-fmodule-mapper=*"
+    - "-fdeps-format=*"
