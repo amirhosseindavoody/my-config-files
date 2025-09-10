@@ -1,5 +1,5 @@
 [project]
-authors = ["Davoody, Amirhossein <amirhossein.davoody@intel.com>"]
+authors = ["Davoody, Amirhossein <amirhossein.davoody@gmail.com>"]
 channels = ["conda-forge"]
 description = "Add a short description here"
 name = "cpp_project"
