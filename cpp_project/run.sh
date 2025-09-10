@@ -2,6 +2,13 @@
 
 set -euo pipefail
 
+# Check if we're running in a pixi environment, if not, re-run with pixi
+if [[ -z "${PIXI_ENVIRONMENT_NAME:-}" ]]; then
+    echo "Pixi environment not detected. Re-running script with 'pixi run'..."
+    exec pixi run "$0" "$@"
+    exit $?
+fi
+
 BUILD_DIR="build/src"
 
 format() {
@@ -58,7 +65,6 @@ coverage() {
         -ignore-filename-regex='(tests?|external|build)/'
 }
 
-
 make_tag() {
     build_debug
 
@@ -114,7 +120,7 @@ release() {
     echo -e "\033[1mCreated release to $release_area\033[0m"
 
     cd "$release_area"
-    pixi shell-hook --manifest-path "$release_area/pixi.toml" --shell bash > activate.sh
+    pixi shell-hook --manifest-path "$release_area/pixi.toml" --shell bash >activate.sh
     chmod g+rw -R .pixi
     echo -e "\033[1mRun \`source activate.sh\` to activate the environment\033[0m"
 
