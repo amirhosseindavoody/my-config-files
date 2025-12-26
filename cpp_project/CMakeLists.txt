@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.30)
 
-project(MCMC LANGUAGES CXX)
+project(cpp-template LANGUAGES CXX)
 
 include(CTest)
 include(GoogleTest)
